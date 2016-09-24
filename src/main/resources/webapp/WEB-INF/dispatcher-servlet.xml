@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:p="http://www.springframework.org/schema/p" 
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc" 
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd"
+		>
+	
+    
+    <!-- Specifying base package for which, it will be scaned for any of these, 
+    @Component, @Controller, @Service, @Repository Annotation--> 
+	<context:component-scan base-package="com.spring_jetty"></context:component-scan>
+	
+	<!-- Specifying path to the wiring property file 
+		`classpath` here refers to the `src/main/resource`
+	-->
+	<context:property-placeholder location="classpath:wiring.properties" ignore-unresolvable="true"/>
+	
+	
+	<!-- *************** Hibernate Configuration ****************-->
+	
+	<!-- Initializing `SessionFactory` bean -->
+	<bean id="sessionFactory"
+	    class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+	    
+	    <!--  ``ref="dataSource"`` referes to the dataSource bean defined below with ``id="dataSource"``-->
+	    <property name="dataSource" ref="dataSource" />
+	    <property name="packagesToScan" value="com.spring_jetty.entities" />
+	    <property name="hibernateProperties">
+	        <props>
+	            <prop key="hibernate.dialect">${hibernate.dialect}</prop>
+	        </props>
+	    </property>
+	</bean>
+	
+	<!-- Initializing the dataSource bean for `SessionFacrory` -->
+	<bean id="dataSource"
+	    class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+	    
+	    <!-- Values like `jdbc.url`, `jdbc.username` etc are defined inside wiring.properties file -->
+	    <property name="driverClassName" value="${jdbc.driverClassName}" />
+	    <property name="url" value="${jdbc.url}" />
+	    <property name="username" value="${jdbc.username}" />
+	    <property name="password" value="${jdbc.password}" />
+	    
+	</bean>
+	
+	<!-- Initializing `HibernateTransactionManager` bean
+		Basic Explanation of it can be found here:
+			http://stackoverflow.com/questions/21625282/why-is-hibernatetransactionmanager-required-in-spring 
+	 
+		--- It is `PlatformTransactionManager` implementation for a single Hibernate SessionFactory.
+		--- Binds a Hibernate Session from the specified factory to the thread, potentially allowing for one 
+			thread-bound Session per factory. `SessionFactoryUtils` and HibernateTemplate are aware of thread-bound 
+			Sessions and participate in such transactions automatically
+		--- Using either of those or going through `SessionFactory.getCurrentSession()` is required for 
+			Hibernate access code that needs to support this transaction handling mechanism.
+			
+			Detailed explanation of Spring Transaction Management can found here:
+			http://docs.spring.io/autorepo/docs/spring/4.2.x/spring-framework-reference/html/transaction.html
+	--> 
+	<bean id="txManager" 
+	    class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+	
+	<!-- Enabling the configuration of transactional behavior based on annotations 
+		REFER: http://stackoverflow.com/questions/2402329/what-does-txannotation-driven-in-spring-really-do-in-the-code-level 
+	-->
+	<tx:annotation-driven transaction-manager="txManager" />
+	
+</beans>
