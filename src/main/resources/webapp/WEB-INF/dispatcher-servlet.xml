@@ -25,6 +25,8 @@
 	<context:property-placeholder location="classpath:wiring.properties" ignore-unresolvable="true"/>
 	
 	
+	<mvc:annotation-driven/>
+	
 	<!-- *************** Hibernate Configuration ****************-->
 	
 	<!-- Initializing `SessionFactory` bean -->
@@ -37,6 +39,8 @@
 	    <property name="hibernateProperties">
 	        <props>
 	            <prop key="hibernate.dialect">${hibernate.dialect}</prop>
+	            <prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</prop>
+	            
 	        </props>
 	    </property>
 	</bean>
@@ -57,11 +61,11 @@
 		Basic Explanation of it can be found here:
 			http://stackoverflow.com/questions/21625282/why-is-hibernatetransactionmanager-required-in-spring 
 	 
-		--- It is `PlatformTransactionManager` implementation for a single Hibernate SessionFactory.
-		--- Binds a Hibernate Session from the specified factory to the thread, potentially allowing for one 
+		 1) It is `PlatformTransactionManager` implementation for a single Hibernate SessionFactory.
+		 2) Binds a Hibernate Session from the specified factory to the thread, potentially allowing for one 
 			thread-bound Session per factory. `SessionFactoryUtils` and HibernateTemplate are aware of thread-bound 
 			Sessions and participate in such transactions automatically
-		--- Using either of those or going through `SessionFactory.getCurrentSession()` is required for 
+		 3) Using either of those or going through `SessionFactory.getCurrentSession()` is required for 
 			Hibernate access code that needs to support this transaction handling mechanism.
 			
 			Detailed explanation of Spring Transaction Management can found here:
